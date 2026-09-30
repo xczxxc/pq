@@ -1,0 +1,131 @@
+-- ================================================
+-- PHONE ID VIEWER - Modular Loader (FIXED)
+-- ================================================
+
+local BASE_URL = "https://raw.githubusercontent.com/AlfreadRorw/AvatarClone/main/"
+
+local function Load(path)
+    local ok, result = pcall(function()
+        return loadstring(game:HttpGet(BASE_URL .. path, true))()
+    end)
+    if not ok then
+        warn("[PhoneIDViewer] Failed: " .. path .. " | " .. tostring(result))
+    end
+    return ok and result or nil
+end
+
+-- ==================== SERVICES ====================
+local Services = {
+    Players = game:GetService("Players"),
+    TweenService = game:GetService("TweenService"),
+    UserInputService = game:GetService("UserInputService"),
+    HttpService = game:GetService("HttpService"),
+    Workspace = game:GetService("Workspace"),
+    RunService = game:GetService("RunService"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    SoundService = game:GetService("SoundService"),
+    TeleportService = game:GetService("TeleportService"),
+    CoreGui = game:GetService("CoreGui"),
+    MarketplaceService = game:GetService("MarketplaceService"),
+}
+_G.Services = Services
+
+local LocalPlayer = Services.Players.LocalPlayer
+_G.LocalPlayer = LocalPlayer
+
+-- ==================== LOAD CORE MODULES ====================
+local Config = Load("Config.lua")
+_G.Config = Config
+
+local Theme = Load("Core/Theme.lua")
+_G.T = Theme
+
+local Helpers = Load("Core/Helpers.lua")
+_G.Helpers = Helpers
+
+-- ==================== LOADING NOTIFICATION ====================
+Load("Core/LoadingNotif.lua")
+
+-- ==================== LOAD MODULES WITH PROGRESS ====================
+local totalSteps = 25
+local currentStep = 0
+
+local function updateProgress(stepName)
+    currentStep = currentStep + 1
+    if _G.updateLoadingProgress then
+        _G.updateLoadingProgress(currentStep, totalSteps, stepName)
+    end
+end
+
+-- Tampilkan loading notification
+if _G.showLoadingNotification then
+    _G.showLoadingNotification()
+end
+
+-- Load Storage
+updateProgress("Storage")
+local Storage = Load("Core/Storage.lua")
+_G.Storage = Storage
+
+-- Firebase removed: this build runs fully local and does not require an access key.
+_G.Firebase = nil
+
+-- Load Phone
+updateProgress("Phone GUI")
+local Phone = Load("Core/Phone.lua")
+_G.Phone = Phone
+
+-- Load Icons
+updateProgress("Icons")
+local Icons = Load("Core/Icons.lua")
+_G.Icons = Icons
+
+-- Load BuildIcons
+updateProgress("Build Icons")
+Load("Core/BuildIcons.lua")
+
+
+-- CommandListener depends on Firebase and is intentionally disabled in local build.
+-- ==================== LOAD APPLICATIONS ====================
+local AppList = {
+    {path = "Applications/Dashboard.lua", name = "Dashboard"},
+    {path = "Applications/Players.lua", name = "Players"},
+    {path = "Applications/Clone.lua", name = "Clone"},
+    {path = "Applications/Preset.lua", name = "Preset"},
+    {path = "Applications/Favorites.lua", name = "Favorites"},
+    {path = "Applications/Items.lua", name = "Items"},
+    {path = "Applications/Teleport.lua", name = "Teleport"},
+    {path = "Applications/Volume.lua", name = "Volume"},
+    {path = "Applications/Friends.lua", name = "Friends"},
+    {path = "Applications/Server.lua", name = "Server"},
+    {path = "Applications/WhoOnline.lua", name = "WhoOnline"},
+    {path = "Applications/Messages.lua", name = "Messages"},
+    {path = "Applications/Settings.lua", name = "Settings"},
+    {path = "Applications/Appearance.lua", name = "Appearance"},
+    {path = "Applications/Premium.lua", name = "Premium"},
+    {path = "Applications/AlfreadAI.lua", name = "AlfreadAI"},
+    {path = "Applications/Shader.lua", name = "Shader"},
+    {path = "Applications/Games.lua", name = "Games"},
+    {path = "Applications/Emote.lua", name = "Emote"},
+    {path = "Applications/MyClone.lua", name = "MyClone"},
+    {path = "Applications/Model3D.lua", name = "Model3D"},
+}
+
+for _, app in ipairs(AppList) do
+    updateProgress(app.name)
+    Load(app.path)
+end
+
+-- Load FloatingIcon
+updateProgress("Floating Icon")
+Load("Core/FloatingIcon.lua")
+
+-- Selesai
+if _G.finishLoading then
+    _G.finishLoading()
+end
+
+print("[PhoneIDViewer] All modules loaded successfully!")
+print("[PhoneIDViewer] Phone:", _G.Phone and "OK" or "FAILED")
+print("[PhoneIDViewer] Firebase: disabled (local build)")
+print("[PhoneIDViewer] Storage:", _G.Storage and "OK" or "FAILED")
